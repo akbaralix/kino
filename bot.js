@@ -25,7 +25,7 @@ const connectMongo = async () => {
     usersCollection = db.collection("users");
     videosCollection = db.collection("videos");
     console.log("✅ MongoDB Atlas ga ulandi!");
-    startBot(); // 👉 faqat MongoDB ulanganidan keyin ishga tushiramiz
+    startBot(); // 👉 faqat MongoDB ulanganidan keyin ishga tushiramiza
   } catch (err) {
     console.error("❌ MongoDB ulanishda xatolik:", err);
   }
