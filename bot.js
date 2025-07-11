@@ -147,12 +147,26 @@ function startBot() {
     }
 
     if (user.id === adminId && bot.broadcasting) {
-      const users = await usersCollection.find({}).toArray();
-      users.forEach((u) => {
-        bot.sendMessage(u.id, text).catch(() => {});
-      });
       bot.broadcasting = false;
-      return bot.sendMessage(chatId, "✅ Xabar yuborildi.");
+
+      if (msg.photo) {
+        const photoId = msg.photo[msg.photo.length - 1].file_id; // eng sifatlisini olish
+        const caption = msg.caption || "";
+
+        const users = await usersCollection.find({}).toArray();
+        users.forEach((u) => {
+          bot.sendPhoto(u.id, photoId, { caption }).catch(() => {});
+        });
+
+        return bot.sendMessage(chatId, "✅ Rasmli xabar yuborildi.");
+      } else {
+        const users = await usersCollection.find({}).toArray();
+        users.forEach((u) => {
+          bot.sendMessage(u.id, msg.text).catch(() => {});
+        });
+
+        return bot.sendMessage(chatId, "✅ Matnli xabar yuborildi.");
+      }
     }
 
     if (user.id === adminId) {
