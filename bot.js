@@ -1,3 +1,4 @@
+const express = require("express");
 const TelegramBot = require("node-telegram-bot-api");
 const { MongoClient } = require("mongodb");
 require("dotenv").config();
@@ -17,6 +18,17 @@ let adminStep = {
   video: null,
   code: null,
 };
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get("/", (req, res) => {
+  res.send("Bot ishlayapti!");
+});
+
+app.listen(PORT, () => {
+  console.log(`🌐 Server is running on port ${PORT}`);
+});
 
 const connectMongo = async () => {
   try {
