@@ -44,7 +44,6 @@ const connectMongo = async () => {
 };
 
 connectMongo();
-
 const isSubscribed = async (userId) => {
   try {
     const res = await bot.getChatMember(channelUsername, userId);
@@ -76,8 +75,9 @@ function startBot() {
     if (!subscribed && user.id !== adminId) {
       return bot.sendMessage(
         chatId,
-        "❗ Botdan foydalanish uchun quyidagi kanalga obuna bo‘ling:",
+        "*❌ Kechirasiz botimizdan foydalanishdan oldin ushbu kanallarga a'zo bo'lishingiz kerak.*",
         {
+          parse_mode: "Markdown",
           reply_markup: {
             inline_keyboard: [
               [
@@ -97,7 +97,7 @@ function startBot() {
 
     if (text === "/start") {
       if (user.id === adminId) {
-        return bot.sendMessage(chatId, "👋 Admin menyu:", {
+        return bot.sendMessage(chatId, "🧑‍💻 Admin menyusi", {
           reply_markup: {
             keyboard: [
               ["➕ Kino qo‘shish", "📊 Statistikani ko‘rish"],
@@ -109,7 +109,7 @@ function startBot() {
       } else {
         return bot.sendMessage(
           chatId,
-          `*👋 Xush kelibsiz! ${msg.from.first_name}  Kino kodi yuboring, men sizga mos videoni topib beraman.*`,
+          `*👋 Assalomu alaykum ${msg.from.first_name} botimizga xush kelibsiz.*\n\n✍🏻 Kino kodini yuboring...`,
           {
             parse_mode: "Markdown",
           }
@@ -120,7 +120,16 @@ function startBot() {
     if (user.id === adminId) {
       if (text === "❌ Bekor qilish") {
         adminStep = { stage: null, video: null, code: null };
-        return bot.sendMessage(chatId, "❌ Amaliyot bekor qilindi.");
+        bot.broadcasting = false;
+        return bot.sendMessage(chatId, "❌ Amaliyot bekor qilindi.", {
+          reply_markup: {
+            keyboard: [
+              ["➕ Kino qo‘shish", "📊 Statistikani ko‘rish"],
+              ["👥 Barchaga habar yuborish"],
+            ],
+            resize_keyboard: true,
+          },
+        });
       }
 
       if (text === "📊 Statistikani ko‘rish") {
@@ -131,17 +140,27 @@ function startBot() {
           `📊 Statistika:\n👥 Foydalanuvchilar: ${usersCount}\n🎬 Kinolar: ${videosCount}`
         );
       }
-
       if (text === "➕ Kino qo‘shish") {
         adminStep.stage = "waiting_for_video";
-        return bot.sendMessage(chatId, "📥 Kino videosini yuboring:");
+        return bot.sendMessage(chatId, "📥 Kino videosini yuboring:", {
+          reply_markup: {
+            keyboard: [["❌ Bekor qilish"]],
+            resize_keyboard: true,
+          },
+        });
       }
 
       if (text === "👥 Barchaga habar yuborish") {
         bot.broadcasting = true;
         return bot.sendMessage(
           chatId,
-          "✉️ Yubormoqchi bo‘lgan xabaringizni yozing:"
+          "✉️ Yubormoqchi bo‘lgan xabaringizni yozing:",
+          {
+            reply_markup: {
+              keyboard: [["❌ Bekor qilish"]],
+              resize_keyboard: true,
+            },
+          }
         );
       }
     }
@@ -158,14 +177,14 @@ function startBot() {
           bot.sendPhoto(u.id, photoId, { caption }).catch(() => {});
         });
 
-        return bot.sendMessage(chatId, "✅ Rasmli xabar yuborildi.");
+        return bot.sendMessage(chatId, "✅ Xabar yuborildi.");
       } else {
         const users = await usersCollection.find({}).toArray();
         users.forEach((u) => {
           bot.sendMessage(u.id, msg.text).catch(() => {});
         });
 
-        return bot.sendMessage(chatId, "✅ Matnli xabar yuborildi.");
+        return bot.sendMessage(chatId, "✅ Xabar yuborildi.");
       }
     }
 
