@@ -54,15 +54,18 @@ const isSubscribed = async (userId) => {
 };
 
 const saveUser = async (user) => {
-  const existing = await usersCollection.findOne({ id: user.id });
-  if (!existing) {
-    await usersCollection.insertOne({
-      id: user.id,
-      first_name: user.first_name,
-      username: user.username || "",
-      joined_at: new Date().toISOString(),
-    });
-  }
+  await usersCollection.updateOne(
+    { id: user.id },
+    {
+      $set: {
+        first_name: user.first_name,
+        username: user.username || "",
+        last_seen: new Date().toISOString(),
+      },
+      $setOnInsert: { joined_at: new Date().toISOString() },
+    },
+    { upsert: true }
+  );
 };
 
 function startBot() {
@@ -70,6 +73,8 @@ function startBot() {
     const chatId = msg.chat.id;
     const text = msg.text?.trim();
     const user = msg.from;
+
+    await saveUser(user);
 
     const subscribed = await isSubscribed(user.id);
     if (!subscribed && user.id !== adminId) {
@@ -92,8 +97,6 @@ function startBot() {
         }
       );
     }
-
-    await saveUser(user);
 
     if (text === "/start") {
       if (user.id === adminId) {
