@@ -12,7 +12,6 @@ let db, usersCollection, videosCollection;
 
 const adminId = 907402803;
 const channelUsername = "@panjara_ortida_prison_berk";
-const channelId = "-1001689577542";
 
 let adminStep = {
   stage: null,
@@ -47,7 +46,7 @@ const connectMongo = async () => {
 connectMongo();
 const isSubscribed = async (userId) => {
   try {
-    const res = await bot.getChatMember(channelId, userId);
+    const res = await bot.getChatMember(channelUsername, userId);
     return ["member", "creator", "administrator"].includes(res.status);
   } catch {
     return false;
@@ -74,13 +73,11 @@ function startBot() {
     const text = msg.text?.trim();
     const user = msg.from;
     const adminKeyboard = {
-      reply_markup: {
-        keyboard: [
-          ["➕ Kino qo‘shish", "📊 Statistikani ko‘rish"],
-          ["👥 Barchaga habar yuborish"],
-        ],
-        resize_keyboard: true,
-      },
+      keyboard: [
+        ["➕ Kino qo‘shish", "📊 Statistikani ko‘rish"],
+        ["👥 Barchaga habar yuborish"],
+      ],
+      resize_keyboard: true,
     };
 
     await saveUser(user);
