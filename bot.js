@@ -216,6 +216,7 @@ function startBot() {
         adminStep = { stage: null, video: null, code: null };
         return bot.sendMessage(chatId, "*✅ Kino saqlandi!*", {
           parse_mode: "Markdown",
+          reply_markup: adminKeyboard,
         });
       }
     }
