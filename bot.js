@@ -128,11 +128,9 @@ function startBot() {
       if (text === "❌ Bekor qilish") {
         adminStep = { stage: null, video: null, code: null };
         bot.broadcasting = false;
-        return bot.sendMessage(
-          chatId,
-          "❌ Amaliyot bekor qilindi.",
-          adminKeyboard
-        );
+        return bot.sendMessage(chatId, "❌ Amaliyot bekor qilindi.", {
+          reply_markup: adminKeyboard,
+        });
       }
 
       if (text === "📊 Statistikani ko‘rish") {
@@ -180,14 +178,18 @@ function startBot() {
           bot.sendPhoto(u.id, photoId, { caption }).catch(() => {});
         });
 
-        return bot.sendMessage(chatId, "✅ Xabar yuborildi.", adminKeyboard);
+        return bot.sendMessage(chatId, "✅ Xabar yuborildi.", {
+          reply_markup: adminKeyboard,
+        });
       } else {
         const users = await usersCollection.find({}).toArray();
         users.forEach((u) => {
           bot.sendMessage(u.id, msg.text).catch(() => {});
         });
 
-        return bot.sendMessage(chatId, "✅ Xabar yuborildi.", adminKeyboard);
+        return bot.sendMessage(chatId, "✅ Xabar yuborildi.", {
+          reply_markup: adminKeyboard,
+        });
       }
     }
 
