@@ -86,7 +86,7 @@ function startBot() {
       if (user.id === adminId) {
         return bot.sendMessage(
           chatId,
-          `🧑‍💻* Admin* [${user.first_name}](tg://user?id=${user.id})`,
+          `🧑‍💻*Salom Admin* [${user.first_name}](tg://user?id=${user.id})`,
           {
             parse_mode: "Markdown",
             reply_markup: adminKeyboard,
@@ -95,7 +95,7 @@ function startBot() {
       } else {
         return bot.sendMessage(
           chatId,
-          `*👋 Assalomu alaykum* [${msg.from.first_name}](tg://user?id=${msg.from.id}) *botimizga xush kelibsiz.*\n\n✍🏻 *Kino kodini yuboring...*`,
+          `*👋 Assalomu alaykum* [${msg.from.first_name}](tg://user?id=${msg.from.id}) *botimizga xush kelibsiz.*\n\n✍🏻 Kino kodini yuboring...`,
           {
             parse_mode: "Markdown",
           }
@@ -244,21 +244,21 @@ function startBot() {
 
   bot.on("callback_query", async (query) => {
     const userId = query.from.id;
-    const chatId = query.message.chat.id;
+    const chatId = query.message?.chat?.id || query.from.id;
 
     if (query.data === "check_sub") {
       const subscribed = await isSubscribed(userId);
+      await bot.answerCallbackQuery(query.id); // ✅ Javob berish majburiy
+
       if (subscribed) {
         await saveUser(query.from);
         return bot.sendMessage(
           chatId,
           "*✅ Obuna tasdiqlandi! Endi foydalanishingiz mumkin.*",
-          {
-            parse_mode: "Markdown",
-          }
+          { parse_mode: "Markdown" }
         );
       } else {
-        return bot.sendMessage(chatId, "*❗ Siz hali obuna bo‘lmagansiz.*", {
+        return bot.sendMessage(chatId, "*❌ Siz hali obuna bo‘lmagansiz.*", {
           parse_mode: "Markdown",
         });
       }
