@@ -242,25 +242,26 @@ function startBot() {
     });
   });
 
-bot.on("callback_query", async (query) => {
-  const chatId = query.message.chat.id;
-  const userId = query.from.id;
+  bot.on("callback_query", async (query) => {
+    const userId = query.from.id;
+    const chatId = query.message?.chat?.id || query.from.id;
 
-  if (query.data === "check_sub") {
-    const subscribed = await isSubscribed(userId);
-    await bot.answerCallbackQuery(query.id); // ✅ Javob berish majburiy
+    if (query.data === "check_sub") {
+      const subscribed = await isSubscribed(userId);
+      await bot.answerCallbackQuery(query.id); // ✅ Javob berish majburiy
 
-    if (subscribed) {
-      await saveUser(query.from);
-      return bot.sendMessage(
-        chatId,
-        "*✅ Obuna tasdiqlandi! Endi foydalanishingiz mumkin.*",
-        { parse_mode: "Markdown" }
-      );
-    } else {
-      return bot.sendMessage(chatId, "*❗ Siz hali obuna bo‘lmagansiz.*", {
-        parse_mode: "Markdown",
-      });
+      if (subscribed) {
+        await saveUser(query.from);
+        return bot.sendMessage(
+          chatId,
+          "*✅ Obuna tasdiqlandi! Endi foydalanishingiz mumkin.*",
+          { parse_mode: "Markdown" }
+        );
+      } else {
+        return bot.sendMessage(chatId, "*❗ Siz hali obuna bo‘lmagansiz.*", {
+          parse_mode: "Markdown",
+        });
+      }
     }
-  }
-});
+  });
+}
