@@ -37,7 +37,7 @@ const connectMongo = async () => {
     usersCollection = db.collection("users");
     videosCollection = db.collection("videos");
     console.log("✅ MongoDB Atlas ga ulandi!");
-    startBot(); // 👉 faqat MongoDB ulanganidan keyin ishga tushiramiza
+    startBot();
   } catch (err) {
     console.error("❌ MongoDB ulanishda xatolik:", err);
   }
@@ -170,7 +170,7 @@ function startBot() {
       bot.broadcasting = false;
 
       if (msg.photo) {
-        const photoId = msg.photo[msg.photo.length - 1].file_id; // eng sifatlisini olish
+        const photoId = msg.photo[msg.photo.length - 1].file_id;
         const caption = msg.caption || "";
 
         const users = await usersCollection.find({}).toArray();
@@ -211,6 +211,7 @@ function startBot() {
           code: adminStep.code,
           file_id: adminStep.video,
           title: text,
+          views: 0,
         });
         adminStep = { stage: null, video: null, code: null };
         return bot.sendMessage(chatId, "*✅ Kino saqlandi!*", {
@@ -237,8 +238,31 @@ function startBot() {
       );
     }
 
-    return bot.sendVideo(chatId, found.file_id, {
-      caption: ` ${found.title}`,
+    // Ko‘rishlar sonini oshiramiz
+    await videosCollection.updateOne({ code: text }, { $inc: { views: 1 } });
+
+    // Yangilangan hujjatni qayta olamiz
+    const updated = await videosCollection.findOne({ code: text });
+
+    return bot.sendVideo(chatId, updated.file_id, {
+      caption: `🎬 ${updated.title}\n📥 *Yuklangan:* ${updated.views}\n\n 🎬@Kinoborubot | Bizning botmiz`,
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "🔐 Barcha kino kodlari",
+              url: `https://t.me/${channelUsername.replace("@", "")}`,
+            },
+          ],
+          [
+            {
+              text: "↪️ Ulashish",
+              switch_inline_query: updated.code,
+            },
+          ],
+        ],
+      },
     });
   });
 
@@ -248,7 +272,7 @@ function startBot() {
 
     if (query.data === "check_sub") {
       const subscribed = await isSubscribed(userId);
-      await bot.answerCallbackQuery(query.id); // ✅ Javob berish majburiy
+      await bot.answerCallbackQuery(query.id);
 
       if (subscribed) {
         await saveUser(query.from);
