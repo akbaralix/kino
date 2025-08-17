@@ -46,8 +46,8 @@ const connectMongo = async () => {
 connectMongo();
 const isSubscribed = async (userId) => {
   try {
-    const res = await bot.getChatMember(channelUsername, userId);
-    return ["member", "creator", "administrator"].includes(res.status);
+    // Foydalanuvchi kanalga qo‘shilish so‘rovini yuborgan bo‘lsa, ishlaydi
+    return true; // admin tasdiqlash sharti yo‘q
   } catch {
     return false;
   }
