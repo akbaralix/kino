@@ -11,7 +11,7 @@ const client = new MongoClient(mongoUri);
 let db, usersCollection, videosCollection;
 
 let adminId = [907402803, 6351614390];
-const channelUsername = "@panjara_ortida_prison_berk";
+const channelUsername = -1002501054130;
 
 let adminStep = {
   stage: null,
@@ -44,11 +44,14 @@ const connectMongo = async () => {
 };
 
 connectMongo();
-const isSubscribed = async (userId) => {
+   const isSubscribed = async (userId) => {
   try {
     const res = await bot.getChatMember(channelUsername, userId);
+    console.log("👤 User status:", res.status);
+
     return ["member", "creator", "administrator"].includes(res.status);
-  } catch {
+  } catch (err) {
+    console.error("❌ isSubscribed error:", err.message);
     return false;
   }
 };
