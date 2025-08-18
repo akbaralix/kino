@@ -75,7 +75,7 @@ function startBot() {
     const adminKeyboard = {
       keyboard: [
         ["➕ Kino qo‘shish", "📊 Statistikani ko‘rish"],
-        ["👥 Admin qo'shish"],
+        ["👥 Admin qo'shish", "➕ Kanal qo'shish"],
         ["📤 Habar yuborish", "✍️ Kino taxrirlash"],
       ],
       resize_keyboard: true,
@@ -213,7 +213,7 @@ function startBot() {
         });
       }
 
-      if (text === "👥 Barchaga habar yuborish") {
+      if (text === "📤 Habar yuborish") {
         bot.broadcasting = true;
         return bot.sendMessage(
           chatId,
@@ -267,6 +267,9 @@ function startBot() {
           },
         }
       );
+    }
+
+    if (text === "➕ Kanal qo'shish") {
     }
 
     if (text === "✍️ Kino taxrirlash") {
