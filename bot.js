@@ -11,7 +11,7 @@ const client = new MongoClient(mongoUri);
 let db, usersCollection, videosCollection;
 
 let adminId = [907402803, 6351614390];
-const channelUsername = "@panjara_ortida_prison_berk";
+const channelUsername = "@+fVbd9eddhE0xNWNi";
 
 let adminStep = {
   stage: null,
