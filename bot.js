@@ -47,9 +47,14 @@ connectMongo();
    const isSubscribed = async (userId) => {
   try {
     const res = await bot.getChatMember(channelUsername, userId);
-    console.log("👤 User status:", res.status);
+    console.log("👤 User status:", res.status); // test uchun ko‘rish mumkin
 
-    return ["member", "creator", "administrator"].includes(res.status);
+    return [
+      "member",        // oddiy a'zo
+      "creator",       // kanal egasi
+      "administrator", // admin
+      "restricted"     // "Join request" yuborgan foydalanuvchi
+    ].includes(res.status);
   } catch (err) {
     console.error("❌ isSubscribed error:", err.message);
     return false;
