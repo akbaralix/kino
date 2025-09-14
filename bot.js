@@ -8,10 +8,10 @@ const bot = new TelegramBot(token, { polling: true });
 
 const mongoUri = process.env.MONGO_URI;
 const client = new MongoClient(mongoUri);
-let db, usersCollection, videosCollection;
+let db, usersCollection, videosCollection, kanalsCollection;
 
-let adminId = [907402803, 6351614390];
-const channelUsername = -1002501054130;
+let adminId = [907402803];
+let channelUsername = "@panjara_ortida_prison_berk";
 
 let adminStep = {
   stage: null,
@@ -36,6 +36,11 @@ const connectMongo = async () => {
     db = client.db("telegramBot");
     usersCollection = db.collection("users");
     videosCollection = db.collection("videos");
+    kanalsCollection = db.collection("kanals");
+
+    const kanal = await kanalsCollection.findOne({});
+    if (kanal) channelUsername = kanal.username;
+
     console.log("✅ MongoDB Atlas ga ulandi!");
     startBot();
   } catch (err) {
@@ -44,14 +49,11 @@ const connectMongo = async () => {
 };
 
 connectMongo();
-   const isSubscribed = async (userId) => {
+const isSubscribed = async (userId) => {
   try {
     const res = await bot.getChatMember(channelUsername, userId);
-    console.log("👤 User status:", res.status);
-
     return ["member", "creator", "administrator"].includes(res.status);
-  } catch (err) {
-    console.error("❌ isSubscribed error:", err.message);
+  } catch {
     return false;
   }
 };
@@ -78,7 +80,7 @@ function startBot() {
     const adminKeyboard = {
       keyboard: [
         ["➕ Kino qo‘shish", "📊 Statistikani ko‘rish"],
-        ["👥 Admin qo'shish", "➕ Kanal qo'shish"],
+        ["👥 Admin qo'shish", "🔗 Kanal qo'shish"],
         ["📤 Habar yuborish", "✍️ Kino taxrirlash"],
       ],
       resize_keyboard: true,
@@ -216,7 +218,7 @@ function startBot() {
         });
       }
 
-      if (text === "📤 Habar yuborish") {
+      if (text === "👥 Barchaga habar yuborish") {
         bot.broadcasting = true;
         return bot.sendMessage(
           chatId,
@@ -272,7 +274,19 @@ function startBot() {
       );
     }
 
-    if (text === "➕ Kanal qo'shish") {
+    if (text === "🔗 Kanal qo'shish") {
+      adminStep = { stage: "waiting_for_channel_username" };
+      return bot.sendMessage(
+        chatId,
+        "*🔗 Kanal qo'shish uchun kanal username ni yuboring (masalan: @kanal):*",
+        {
+          parse_mode: "Markdown",
+          reply_markup: {
+            keyboard: [["❌ Bekor qilish"]],
+            resize_keyboard: true,
+          },
+        }
+      );
     }
 
     if (text === "✍️ Kino taxrirlash") {
@@ -287,6 +301,26 @@ function startBot() {
           },
         }
       );
+    }
+    if (
+      adminId.includes(user.id) &&
+      adminStep.stage === "waiting_for_channel_username"
+    ) {
+      if (!text.startsWith("@") || text.length < 2) {
+        return bot.sendMessage(chatId, "❌ Noto'g'ri kanal username.");
+      }
+
+      channelUsername = text.trim();
+      await kanalsCollection.updateOne(
+        { username: channelUsername },
+        { $set: { username: channelUsername } },
+        { upsert: true }
+      );
+      adminStep.stage = null;
+
+      return bot.sendMessage(chatId, `✅ Kanal qo'shildi: ${channelUsername}`, {
+        reply_markup: adminKeyboard,
+      });
     }
     if (
       adminId.includes(user.id) &&
@@ -448,14 +482,14 @@ function startBot() {
     const updated = await videosCollection.findOne({ code: text });
 
     return bot.sendVideo(chatId, updated.file_id, {
-      caption: ` ${updated.title}\n📥 *Yuklangan:* ${updated.views}\n\n 🎬@Kinoborubot | Bizning botmiz`,
+      caption: `🎬 ${updated.title}\n📥 *Yuklangan:* ${updated.views}\n\n 🎬@Kinoborubot | Bizning botmiz`,
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
           [
             {
               text: "🔐 Barcha kino kodlari",
-              url: `https://t.me/${channelUsername.replace("@", "")}`,
+              url: `https://t.me/panjara_ortida_prison_berk`,
             },
           ],
           [
