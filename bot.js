@@ -218,7 +218,7 @@ function startBot() {
         });
       }
 
-      if (text === "👥 Barchaga habar yuborish") {
+      if (text === "📤 Habar yuborish") {
         bot.broadcasting = true;
         return bot.sendMessage(
           chatId,
