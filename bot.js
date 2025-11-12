@@ -10,8 +10,8 @@ const mongoUri = process.env.MONGO_URI;
 const client = new MongoClient(mongoUri);
 let db, usersCollection, videosCollection, kanalsCollection;
 
-let adminId = [907402803];
-let channelUsername = "@panjara_ortida_prison_berk";
+let adminId = [907402803, 6268382606];
+let channelUsername = [];
 
 let adminStep = {
   stage: null,
@@ -80,7 +80,7 @@ function startBot() {
     const adminKeyboard = {
       keyboard: [
         ["➕ Kino qo‘shish", "📊 Statistikani ko‘rish"],
-        ["👥 Admin qo'shish", "🔗 Kanal qo'shish"],
+        ["🔗 Kanal qo'shish", "⛓️‍💥 Kanal uzish"],
         ["📤 Habar yuborish", "✍️ Kino taxrirlash"],
       ],
       resize_keyboard: true,
@@ -259,21 +259,6 @@ function startBot() {
         });
       }
     }
-    if (text === "👥 Admin qo'shish") {
-      adminStep = { stage: "waiting_for_admin_id" };
-      return bot.sendMessage(
-        chatId,
-        "*👥 Admin qo'shish uchun admin ID ni yuboring:*",
-        {
-          parse_mode: "Markdown",
-          reply_markup: {
-            keyboard: [["❌ Bekor qilish"]],
-            resize_keyboard: true,
-          },
-        }
-      );
-    }
-
     if (text === "🔗 Kanal qo'shish") {
       adminStep = { stage: "waiting_for_channel_username" };
       return bot.sendMessage(
@@ -288,6 +273,75 @@ function startBot() {
         }
       );
     }
+
+    if (adminStep.stage === "waiting_for_channel_username") {
+      if (!text.startsWith("@") || text.length < 2) {
+        return bot.sendMessage(chatId, "❌ Noto'g'ri kanal username.");
+      }
+
+      // DB ga saqlash
+      await kanalsCollection.updateOne(
+        { username: text.trim() },
+        { $set: { username: text.trim() } },
+        { upsert: true }
+      );
+
+      adminStep.stage = null;
+      return bot.sendMessage(chatId, `✅ Kanal qo'shildi: ${text.trim()}`, {
+        reply_markup: adminKeyboard,
+      });
+    }
+
+    if (text === "⛓️‍💥 Kanal uzish") {
+      const channels = await kanalsCollection.find({}).toArray();
+      if (!channels.length) {
+        return bot.sendMessage(chatId, "❌ Hozircha kanal mavjud emas.");
+      }
+
+      adminStep = { stage: "waiting_for_channel_delete" };
+
+      // Inline keyboard orqali tanlash
+      const buttons = channels.map((ch) => [
+        { text: `❌ ${ch.username}`, callback_data: `delete_${ch.username}` },
+      ]);
+
+      return bot.sendMessage(chatId, "Qaysi kanalni o‘chirmoqchisiz?", {
+        reply_markup: { inline_keyboard: buttons },
+      });
+    }
+
+    bot.on("callback_query", async (query) => {
+      const userId = query.from.id;
+      const chatId = query.message?.chat?.id || query.from.id;
+
+      // Kanalni o'chirish
+      if (query.data.startsWith("delete_") && adminId.includes(userId)) {
+        const username = query.data.replace("delete_", "");
+        await kanalsCollection.deleteOne({ username });
+        await bot.answerCallbackQuery(query.id, {
+          text: `✅ ${username} o'chirildi.`,
+        });
+        return bot.sendMessage(chatId, `✅ Kanal o'chirildi: ${username}`);
+      }
+
+      // Obuna tekshirish callback
+      if (query.data === "check_sub") {
+        const subscribed = await isSubscribed(userId);
+        await bot.answerCallbackQuery(query.id);
+        if (subscribed) {
+          await saveUser(query.from);
+          return bot.sendMessage(
+            chatId,
+            "*✅ Obuna tasdiqlandi! Endi foydalanishingiz mumkin.*",
+            { parse_mode: "Markdown" }
+          );
+        } else {
+          return bot.sendMessage(chatId, "*❗ Siz hali obuna bo‘lmagansiz.*", {
+            parse_mode: "Markdown",
+          });
+        }
+      }
+    });
 
     if (text === "✍️ Kino taxrirlash") {
       adminStep = { stage: "editing_code" }; // <<< BU YANGI QATOR
@@ -474,6 +528,15 @@ function startBot() {
         }
       );
     }
+    const getChannelButtons = async () => {
+      const channels = await kanalsCollection.find({}).toArray();
+      return channels.map((ch) => [
+        {
+          text: `🔐 ${ch.username}`,
+          url: `https://t.me/${ch.username.replace("@", "")}`,
+        },
+      ]);
+    };
 
     // Ko‘rishlar sonini oshiramiz
     await videosCollection.updateOne({ code: text }, { $inc: { views: 1 } });
@@ -481,23 +544,15 @@ function startBot() {
     // Yangilangan hujjatni qayta olamiz
     const updated = await videosCollection.findOne({ code: text });
 
+    const channelButtons = await getChannelButtons();
+
     return bot.sendVideo(chatId, updated.file_id, {
-      caption: `🎬 ${updated.title}\n📥 *Yuklangan:* ${updated.views}\n\n 🎬@Kinoborubot | Bizning botmiz`,
+      caption: `🎬 ${updated.title}\n📥 *Yuklangan:* ${updated.views}`,
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [
-            {
-              text: "🔐 Barcha kino kodlari",
-              url: `https://t.me/panjara_ortida_prison_berk`,
-            },
-          ],
-          [
-            {
-              text: "↪️ Ulashish",
-              switch_inline_query: updated.code,
-            },
-          ],
+          ...channelButtons,
+          [{ text: "↪️ Ulashish", switch_inline_query: updated.code }],
         ],
       },
     });
